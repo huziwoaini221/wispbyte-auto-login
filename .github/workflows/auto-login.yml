@@ -1,0 +1,36 @@
+name: Wispbyte Auto Login
+
+on:
+  schedule:
+    # 每 12 天运行一次（比 14 天提前 2 天，确保不会忘记）
+    - cron: '0 8 */12 * *'
+  
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  auto-login:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run auto login
+        env:
+          WISPBYTE_EMAIL: ${{ secrets.WISPBYTE_EMAIL }}
+          WISPBYTE_PASSWORD: ${{ secrets.WISPBYTE_PASSWORD }}
+        run: npm run login
+      
+      - name: Send notification on failure
+        if: failure()
+        run: |
+          echo "❌ Wispbyte 自动登录失败！"
+          echo "请检查 GitHub Secrets 中的 WISPBYTE_EMAIL 和 WISPBYTE_PASSWORD"

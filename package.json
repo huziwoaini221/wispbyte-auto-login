@@ -1,0 +1,15 @@
+{
+  "name": "wispbyte-auto-login",
+  "version": "1.0.0",
+  "description": "Wispbyte Free Plan 自动续期工具",
+  "main": "login.js",
+  "scripts": {
+    "login": "node login.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  },
+  "keywords": ["wispbyte", "auto-login", "github-actions"],
+  "author": "",
+  "license": "MIT"
+}
