@@ -3,6 +3,10 @@ const puppeteer = require('puppeteer-core');
 const EMAIL = process.env.WISPBYTE_EMAIL;
 const PASSWORD = process.env.WISPBYTE_PASSWORD;
 
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function login() {
   console.log('开始自动登录 Wispbyte...');
   console.log('时间:', new Date().toISOString());
@@ -25,23 +29,56 @@ async function login() {
     
     console.log('正在访问登录页面...');
     await page.goto('https://wispbyte.com/client/login', { 
-      waitUntil: 'networkidle2',
+      waitUntil: 'domcontentloaded',
       timeout: 60000 
     });
     
-    await page.waitForSelector('input[type="email"], input[name="email"], input[placeholder*="email"]', { timeout: 10000 });
+    // 等待 Cloudflare 挑战完成
+    console.log('等待页面加载 (Cloudflare)...');
+    await sleep(5000);
+    
+    // 刷新页面，可能 Cloudflare 已通过
+    console.log('刷新页面...');
+    await page.reload({ waitUntil: 'networkidle2', timeout: 30000 });
+    await sleep(3000);
+    
+    // 检查当前页面
+    console.log('当前 URL:', page.url());
+    const title = await page.title();
+    console.log('页面标题:', title);
+    
+    // 如果还在 Cloudflare 页面，继续等待
+    if (title.includes('challenge') || title.includes('Just a moment') || title.includes('blocked')) {
+      console.log('Cloudflare 挑战中，等待...');
+      await sleep(10000);
+      await page.reload({ waitUntil: 'networkidle2', timeout: 30000 });
+      await sleep(5000);
+    }
+    
+    // 尝试等待输入框出现
+    console.log('等待登录表单...');
+    try {
+      await page.waitForSelector('input[type="email"], input[name="email"], input[placeholder*="email"], input[placeholder*="Email"]', { 
+        timeout: 30000 
+      });
+    } catch (e) {
+      // 输出页面内容帮助调试
+      const html = await page.content();
+      console.log('页面内容前500字符:', html.substring(0, 500));
+      throw new Error('找不到登录输入框');
+    }
     
     console.log('正在输入登录信息...');
     
-    const emailInput = await page.$('input[type="email"], input[name="email"], input[placeholder*="email"]');
+    const emailInput = await page.$('input[type="email"], input[name="email"], input[placeholder*="email"], input[placeholder*="Email"]');
     const passwordInput = await page.$('input[type="password"], input[name="password"]');
     
     if (emailInput && passwordInput) {
       await emailInput.click({ clickCount: 3 });
-      await emailInput.type(EMAIL, { delay: 50 });
+      await emailInput.type(EMAIL, { delay: 30 });
       
       await passwordInput.click({ clickCount: 3 });
-      await passwordInput.type(PASSWORD, { delay: 50 });
+      await passwordInput.type(PASSWORD, { delay: 30 });
       
       console.log('正在点击登录按钮...');
       
