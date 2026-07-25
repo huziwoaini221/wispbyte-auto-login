@@ -2,7 +2,7 @@ name: Wispbyte Auto Login
 
 on:
   schedule:
-    # 每 12 天运行一次（比 14 天提前 2 天，确保不会忘记）
+    # 每 12 天运行一次（比 14 天提前 2 天）
     - cron: '0 8 */12 * *'
   
   workflow_dispatch: # 允许手动触发
@@ -21,16 +21,21 @@ jobs:
           node-version: '22'
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          # 安装系统 Chrome 和依赖
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+          # 安装 puppeteer-core（不下载 Chrome）
+          npm install puppeteer-core
       
       - name: Run auto login
         env:
           WISPBYTE_EMAIL: ${{ secrets.WISPBYTE_EMAIL }}
           WISPBYTE_PASSWORD: ${{ secrets.WISPBYTE_PASSWORD }}
-        run: npm run login
+        run: node login.js
       
       - name: Send notification on failure
         if: failure()
         run: |
-          echo "❌ Wispbyte 自动登录失败！"
+          echo "Wispbyte 自动登录失败！"
           echo "请检查 GitHub Secrets 中的 WISPBYTE_EMAIL 和 WISPBYTE_PASSWORD"

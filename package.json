@@ -6,9 +6,7 @@
   "scripts": {
     "login": "node login.js"
   },
-  "dependencies": {
-    "puppeteer": "^21.0.0"
-  },
+  "dependencies": {},
   "keywords": ["wispbyte", "auto-login", "github-actions"],
   "author": "",
   "license": "MIT"

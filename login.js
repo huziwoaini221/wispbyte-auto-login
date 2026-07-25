@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 
 const EMAIL = process.env.WISPBYTE_EMAIL;
 const PASSWORD = process.env.WISPBYTE_PASSWORD;
@@ -8,7 +8,8 @@ async function login() {
   console.log('时间:', new Date().toISOString());
   
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: true,
+    executablePath: '/usr/bin/chromium-browser',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -62,7 +63,7 @@ async function login() {
       console.log('当前页面:', currentUrl);
       
       if (!currentUrl.includes('login')) {
-        console.log('✅ 登录成功！');
+        console.log('登录成功！');
         
         console.log('正在访问服务器列表...');
         await page.goto('https://wispbyte.com/client/servers', { 
@@ -70,21 +71,21 @@ async function login() {
           timeout: 30000 
         });
         
-        console.log('✅ 服务器列表页面已访问');
+        console.log('服务器列表页面已访问');
         console.log('续期操作完成！');
         
         return true;
       } else {
-        console.log('❌ 登录失败，请检查账号密码');
+        console.log('登录失败，请检查账号密码');
         return false;
       }
     } else {
-      console.log('❌ 找不到输入框');
+      console.log('找不到输入框');
       return false;
     }
     
   } catch (error) {
-    console.error('❌ 发生错误:', error.message);
+    console.error('发生错误:', error.message);
     return false;
   } finally {
     await browser.close();
